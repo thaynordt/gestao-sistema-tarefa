@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id    Int    @id @default(autoincrement())
+  nome  String @db.VarChar(100)
+  email String @unique @db.VarChar(120)
+  senha String @db.VarChar(100) // hash bcrypt
+
+  @@map("usuarios")
+}
+
+model Colaborador {
+  id      Int      @id @default(autoincrement())
+  nome    String   @db.VarChar(100)
+  email   String   @unique @db.VarChar(120)
+  cpf     String   @db.VarChar(255) // AES-256-GCM
+  cargo   String   @db.VarChar(80)
+  tarefas Tarefa[]
+
+  @@map("colaboradores")
+}
+
+model Tarefa {
+  id            Int           @id @default(autoincrement())
+  titulo        String        @db.VarChar(120)
+  descricao     String?       @db.VarChar(500)
+  status        String        @default("PENDENTE") @db.VarChar(20)
+  colaboradorId Int           @map("colaborador_id")
+  colaborador   Colaborador    @relation(fields: [colaboradorId], references: [id])
+  agendamentos  Agendamento[]
+
+  @@map("tarefas")
+}
+
+model Agendamento {
+  id          Int      @id @default(autoincrement())
+  tarefaId    Int      @map("tarefa_id")
+  tarefa      Tarefa   @relation(fields: [tarefaId], references: [id], onDelete: Cascade)
+  dataEntrega DateTime @map("data_entrega") @db.Date
+  observacao  String?  @db.VarChar(255)
+
+  @@map("agendamentos")
+}
